@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task list</title>
+</head>
+<body>
+    <h1>Tasks: </h1>
+    <div id="task-container"></div>
+
+    <div>
+        <form id="task-form">
+            <p>Title <input id="task-title" name="title"></p>
+            <button onclick="taskAdd(event)" id="task-submit" type="submit">Add</button>
+        </form>
+    </div>
+<script>
+    
+    async function loadTasks() {
+	const response = await fetch("/task-load", {
+	    method: "GET",
+	    headers: {"Accept": "application/json"}
+	});
+
+	if(response.ok) {
+	    const tasks = await response.json();
+	    createTaskElements(tasks);
+	}
+        }
+
+    function createTaskElements(tasks) {
+            const container = document.getElementById("task-container");
+            for(let t of tasks) {
+		const taskContainer = document.createElement("div");
+		const checkbox = document.createElement("input");
+		checkbox.setAttribute("type", "checkbox");
+		checkbox.addEventListener("change", function()  {
+		    if(this.checked) {
+			completeTask(t.id);
+		    }
+		});
+		const taskTitle = document.createElement("span");
+		taskTitle.innerHTML = t.title;
+
+		taskContainer.appendChild(checkbox);
+		taskContainer.appendChild(taskTitle);
+
+                container.insertAdjacentElement("afterend", taskContainer);
+            }
+        }
+    async function completeTask(id) {
+	const response = await fetch(`/task-delete/${id}`, {
+	    method: "DELETE",
+	    headers: {"Content-Type" : "application/json"},
+	    body: JSON.stringify({id})
+    });
+	if(response.ok) {
+	    alert("Task completed!");
+	    window.location.reload();
+	}
+    }
+        async function taskAdd(event){
+            event.preventDefault();
+
+            const title = document.getElementById("task-title").value;
+            if(title == "") {
+                alert("Add task title");
+                return;
+            }
+
+            const response = await fetch("/task-add", {
+                method: "POST",
+                headers: {"Content-Type" : "application/json"},
+                body: JSON.stringify({title})
+            });
+            if(response.ok) {
+		document.getElementById("task-title").value = "";
+                window.location.reload();
+            }
+        }
+        loadTasks();
+    </script>
+</body>
+</html>
