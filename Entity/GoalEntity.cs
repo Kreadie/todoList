@@ -3,5 +3,4 @@ public class GoalEntity {
     public string Title {get;set;} = string.Empty;
     public bool Status {get;set;} = false;
     public DateTime Date {get;set;}
-
 }

@@ -5,5 +5,6 @@ public class GoalDbContext : DbContext {
 
     public GoalDbContext(DbContextOptions<GoalDbContext> options) : base(options) {
         Database.EnsureCreated();    
+
     }
 }

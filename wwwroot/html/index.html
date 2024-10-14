@@ -6,15 +6,15 @@
     <title>Task list</title>
 </head>
 <body>
-    <h1>Tasks: </h1>
-    <div id="task-container"></div>
-
     <div>
         <form id="task-form">
             <p>Title <input id="task-title" name="title"></p>
+	    <p>Date <input type="date" id="task-date" name="date"></p>
             <button onclick="taskAdd(event)" id="task-submit" type="submit">Add</button>
         </form>
     </div>
+    <h1>Tasks: </h1>
+    <div id="task-container"></div>
 <script>
     
     async function loadTasks() {
@@ -31,24 +31,50 @@
 
     function createTaskElements(tasks) {
             const container = document.getElementById("task-container");
+	    const table = document.createElement("table");
+
+	    container.insertAdjacentElement("beforeend", table);
+	const dateHtml = `<tr>
+	    <th scope="col"> Status </th>
+	    <th scope="col"> Title </th>
+	    <th scope="col"> Date </th>
+	    </tr>`;
+
+	    const today = new Date();
             for(let t of tasks) {
-		const taskContainer = document.createElement("div");
-		const checkbox = document.createElement("input");
-		checkbox.setAttribute("type", "checkbox");
-		checkbox.addEventListener("change", function()  {
-		    if(this.checked) {
-			completeTask(t.id);
-		    }
+	        let d = Date.parse(t.date);
+	        d = new Date(d);
+		let properMonth = d.getMonth() + 1;
+
+		const tableRow = document.createElement("tr");
+		const tCheck = document.createElement("input");
+		tCheck.setAttribute("type", "checkbox");
+		tCheck.addEventListener("change", function() {
+	    	if(this.checked)
+		    completeTask(t.id);
 		});
-		const taskTitle = document.createElement("span");
-		taskTitle.innerHTML = t.title;
 
-		taskContainer.appendChild(checkbox);
-		taskContainer.appendChild(taskTitle);
+		const tTitle = document.createElement("td");
+		tTitle.innerHTML = t.title;
+		const tDate = document.createElement("td");
+		tDate.innerHTML = d.getDate() + "." + properMonth + "." + d.getFullYear();
 
-                container.insertAdjacentElement("afterend", taskContainer);
+		tableRow.insertAdjacentElement("beforeend", tCheck);
+		tableRow.insertAdjacentElement("beforeend", tTitle);
+		tableRow.insertAdjacentElement("beforeend", tDate);
+		if(d.getTime() < today)
+		tDate.style.color = "red";
+
+		table.insertAdjacentElement("afterbegin", tableRow);
             }
+	    table.insertAdjacentHTML("afterbegin", dateHtml);
         }
+    function test(t) {
+	if(this.checked)
+	    completeTask(t.id);
+    }
+
+
     async function completeTask(id) {
 	const response = await fetch(`/task-delete/${id}`, {
 	    method: "DELETE",
@@ -64,18 +90,24 @@
             event.preventDefault();
 
             const title = document.getElementById("task-title").value;
+	    const date = document.getElementById("task-date").value;
             if(title == "") {
                 alert("Add task title");
                 return;
             }
+	    if(date == "") {
+		alert("Add task finishing date");
+		return;
+	    }
 
             const response = await fetch("/task-add", {
                 method: "POST",
                 headers: {"Content-Type" : "application/json"},
-                body: JSON.stringify({title})
+                body: JSON.stringify({title : title, date : date})
             });
             if(response.ok) {
 		document.getElementById("task-title").value = "";
+		document.getElementById("task-date").value = Date();
                 window.location.reload();
             }
         }
